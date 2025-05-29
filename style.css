@@ -1,0 +1,178 @@
+/* Fundo geral */
+body {
+  background-color: #e6f0ff; /* azul clarinho suave */
+  color: #222;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cabeçalho */
+.header {
+  background-color: #003c7d; /* azul escuro */
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header .container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.subtitulo {
+  margin-top: 0.3rem;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: #cfd9f9; /* azul clarinho */
+}
+
+/* Menu de abas */
+.menu-abas {
+  background-color: #00275a; /* azul mais escuro */
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+.menu-abas ul {
+  list-style: none;
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.menu-abas ul li {
+  margin: 0;
+}
+
+.menu-abas ul li a {
+  display: block;
+  padding: 1rem 2rem;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.menu-abas ul li a:hover,
+.menu-abas ul li a:focus {
+  background-color: #0041a3;
+  border-bottom: 3px solid #a3b8ff; /* azul claro */
+}
+
+/* Container principal */
+.container {
+  max-width: 1100px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+/* Cards */
+.card {
+  background-color: white;
+  padding: 1.8rem 2rem;
+  margin-bottom: 1.8rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Títulos das seções */
+.card h2 {
+  margin-top: 0;
+  color: #00275a;
+}
+
+/* Títulos das subseções de gráficos */
+.grafico-box h3 {
+  color: #003c7d;
+}
+
+/* Tabela */
+.tabela-scroll {
+  overflow-x: auto;
+}
+
+.tabela-votos {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabela-votos th,
+.tabela-votos td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.tabela-votos th {
+  background-color: #cfd9f9; /* azul clarinho */
+  color: #00275a;
+}
+
+/* Botões */
+.btn {
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #003c7d;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #00275a;
+}
+
+.btn-secundario {
+  background-color: #e0e6f9;
+  color: #00275a;
+}
+
+.btn-secundario:hover {
+  background-color: #cfd9f9;
+}
+
+/* Filtros - inputs */
+.filtros-grid input {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #a3b8ff;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Graficos */
+.graficos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.grafico-box {
+  flex: 1 1 45%;
+  background-color: #f5f9ff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: inset 0 0 12px #dbe6ff;
+}
+
+/* Footer */
+.footer {
+  background-color: #00275a;
+  color: white;
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}

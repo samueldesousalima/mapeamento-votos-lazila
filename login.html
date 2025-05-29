@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Mapeamento de Votos Lázila Gomes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* Estilo simples e limpo para o login */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0050a5 0%, #003c7d 100%);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .login-container {
+      background: #0a2b6b;
+      padding: 2rem 3rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      width: 320px;
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #0071e3;
+      border: none;
+      padding: 0.7rem;
+      border-radius: 5px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0050a5;
+    }
+
+    .error-message {
+      background: #ff4c4c;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <h1>Login</h1>
+    <div id="errorMsg" class="error-message"></div>
+    <form id="loginForm">
+      <label for="username">Usuário</label>
+      <input type="text" id="username" name="username" placeholder="Digite seu usuário" required />
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" placeholder="Digite sua senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Usuário e senha fixos (para exemplo simples)
+    const USUARIO_VALIDO = 'admin';
+    const SENHA_VALIDA = '123456';
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const usuario = loginForm.username.value.trim();
+      const senha = loginForm.password.value.trim();
+
+      if (usuario === USUARIO_VALIDO && senha === SENHA_VALIDA) {
+        // Login OK - redireciona para página principal do sistema
+        window.location.href = 'index.html';
+      } else {
+        // Exibe erro
+        errorMsg.textContent = 'Usuário ou senha incorretos!';
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+
+</html>
