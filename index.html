@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapeamento de Votos - Lázila Gomes</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #004080;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Tela de Login -->
+  <div id="loginSection" class="login-container">
+    <h2>Login</h2>
+    <input type="text" id="loginUsuario" placeholder="Usuário (CPF)" />
+    <input type="password" id="loginSenha" placeholder="Senha" />
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <!-- Conteúdo principal do site - estrutura original -->
+  <div id="mainContent" class="hidden">
+    <header>
+      <h1>Mapeamento de Votos - Lázila Gomes</h1>
+      <p>Sistema de monitoramento popular para fins organizacionais</p>
+    </header>
+
+    <nav>
+      <button onclick="mostrarAba('cadastro')">Cadastrar</button>
+      <button onclick="mostrarAba('filtros')">Filtros</button>
+      <button onclick="mostrarAba('registros')">Registros</button>
+      <button onclick="mostrarAba('estatisticas')">Estatísticas</button>
+      <button onclick="logout()">Sair</button>
+    </nav>
+
+    <main class="container">
+      <section id="cadastro">
+        <h2>Cadastrar Novo Voto</h2>
+        <form id="formCadastro">
+          <input type="text" id="nomeEleitor" required placeholder="Nome do Eleitor" />
+          <input type="text" id="localVotacao" required placeholder="Local de Votação" />
+          <input type="text" id="puxador" required placeholder="Puxador" />
+          <button type="submit">Cadastrar Voto</button>
+        </form>
+      </section>
+
+      <section id="filtros" class="hidden">
+        <h2>Filtrar Registros</h2>
+        <input type="text" id="filtroNome" placeholder="Filtrar por nome do eleitor" />
+        <input type="text" id="filtroLocal" placeholder="Filtrar por local de votação" />
+        <input type="text" id="filtroPuxador" placeholder="Filtrar por puxador" />
+        <button id="limparFiltros">Limpar</button>
+      </section>
+
+      <section id="registros" class="hidden">
+        <h2>Registros Cadastrados</h2>
+        <table id="tabelaVotos" border="1" width="100%">
+          <thead>
+            <tr>
+              <th>Nome do Eleitor</th>
+              <th>Local de Votação</th>
+              <th>Puxador</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section id="estatisticas" class="hidden">
+        <h2>Estatísticas</h2>
+        <canvas id="graficoPuxadores"></canvas>
+        <canvas id="graficoLocais"></canvas>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 Sistema de Mapeamento de Votos - Lázila Gomes. Todos os direitos reservados.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Usuários válidos
+    const usuarios = {
+      "11023618362": "02082007",
+      "61120546397": "06021997",
+      "admin": "1234"
+    };
+
+    // Função para login
+    function fazerLogin() {
+      const user = document.getElementById('loginUsuario').value;
+      const pass = document.getElementById('loginSenha').value;
+      if (usuarios[user] === pass) {
+        localStorage.setItem('logado', 'true');
+        esconderLoginMostrarConteudo();
+      } else {
+        alert('Usuário ou senha incorretos');
+      }
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('logado');
+      location.reload();
+    }
+
+    // Mostra uma aba e esconde as outras
+    function mostrarAba(id) {
+      ['cadastro', 'filtros', 'registros', 'estatisticas'].forEach(aba => {
+        document.getElementById(aba).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    // Esconde login e mostra conteúdo
+    function esconderLoginMostrarConteudo() {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+      mostrarAba('cadastro');
+    }
+
+    // Carregar estado inicial
+    window.onload = function () {
+      if (localStorage.getItem('logado') === 'true') {
+        esconderLoginMostrarConteudo();
+      }
+
+      // Cadastro de votos
+      const form = document.getElementById('formCadastro');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const nome = document.getElementById('nomeEleitor').value;
+        const local = document.getElementById('localVotacao').value;
+        const puxador = document.getElementById('puxador').value;
+
+        const tbody = document.querySelector('#tabelaVotos tbody');
+        const tr = document.createElement('tr');
+
+        const tdNome = document.createElement('td');
+        tdNome.textContent = nome;
+        const tdLocal = document.createElement('td');
+        tdLocal.textContent = local;
+        const tdPuxador = document.createElement('td');
+        tdPuxador.textContent = puxador;
+
+        tr.appendChild(tdNome);
+        tr.appendChild(tdLocal);
+        tr.appendChild(tdPuxador);
+        tbody.appendChild(tr);
+
+        form.reset();
+        alert('Voto cadastrado com sucesso!');
+      });
+
+      // Limpar filtros
+      document.getElementById('limparFiltros').addEventListener('click', function () {
+        document.getElementById('filtroNome').value = '';
+        document.getElementById('filtroLocal').value = '';
+        document.getElementById('filtroPuxador').value = '';
+      });
+    };
+  </script>
+</body>
+
+</html>
