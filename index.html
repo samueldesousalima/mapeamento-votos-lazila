@@ -7,9 +7,8 @@
   <title>Mapeamento de Votos - Lázila Gomes</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Seu CSS já existente */
     html, body {
       height: 100%;
       margin: 0;
@@ -22,8 +21,6 @@
       flex-direction: column;
       min-height: 100vh;
     }
-    .hidden { display: none; }
-    /* Login */
     .login-container {
       max-width: 400px;
       margin: 100px auto;
@@ -52,8 +49,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    /* Cabeçalho, navegação, conteúdo e rodapé (mantidos iguais) */
+    .hidden { display: none; }
     header {
       background-color: #004080;
       color: white;
@@ -130,16 +126,13 @@
 </head>
 
 <body>
-
-  <!-- TELA DE LOGIN -->
   <div id="loginSection" class="login-container">
     <h2>Login</h2>
-    <input type="text" id="loginUsuario" placeholder="Usuário (CPF)" />
-    <input type="password" id="loginSenha" placeholder="Senha" />
+    <input type="text" id="loginUsuario" placeholder="Usuário (CPF)">
+    <input type="password" id="loginSenha" placeholder="Senha">
     <button onclick="fazerLogin()">Entrar</button>
   </div>
 
-  <!-- CONTEÚDO PRINCIPAL -->
   <div id="mainContent" class="hidden">
     <header>
       <h1>Mapeamento de Votos - Lázila Gomes</h1>
@@ -205,12 +198,24 @@
   </div>
 
   <script>
-    // Usuários para login (CPF como usuário e senha)
     const usuarios = {
       "11023618362": "02082007",
       "61120546397": "06021997",
       "admin": "1234"
     };
+
+    // Função para atualizar a tabela com os votos do localStorage
+    function atualizarTabela() {
+      const tabela = document.getElementById("tabelaVotos");
+      tabela.innerHTML = "";
+      const votos = JSON.parse(localStorage.getItem("votos")) || [];
+      votos.forEach(voto => {
+        const linha = tabela.insertRow();
+        linha.insertCell(0).innerText = voto.nome;
+        linha.insertCell(1).innerText = voto.local;
+        linha.insertCell(2).innerText = voto.puxador;
+      });
+    }
 
     function fazerLogin() {
       const user = document.getElementById('loginUsuario').value;
@@ -219,6 +224,7 @@
         localStorage.setItem("logado", "true");
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("mainContent").classList.remove("hidden");
+        atualizarTabela();
       } else {
         alert("Usuário ou senha incorretos");
       }
@@ -233,33 +239,71 @@
       document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Ao carregar a página, mostra login ou conteúdo conforme o login
     window.onload = () => {
-      const logado = localStorage.getItem("logado");
-      if (logado === "true") {
+      if (localStorage.getItem("logado") === "true") {
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("mainContent").classList.remove("hidden");
+        atualizarTabela();
       } else {
         document.getElementById("loginSection").classList.remove("hidden");
         document.getElementById("mainContent").classList.add("hidden");
       }
 
-      // Cadastro de voto
       document.getElementById("formCadastro").addEventListener("submit", (e) => {
         e.preventDefault();
-        const nome = document.getElementById("nomeEleitor").value;
-        const local = document.getElementById("localVotacao").value;
-        const puxador = document.getElementById("puxador").value;
+        const nome = document.getElementById("nomeEleitor").value.trim();
+        const local = document.getElementById("localVotacao").value.trim();
+        const puxador = document.getElementById("puxador").value.trim();
 
-        const tabela = document.getElementById("tabelaVotos");
-        const linha = tabela.insertRow();
-        linha.insertCell(0).innerText = nome;
-        linha.insertCell(1).innerText = local;
-        linha.insertCell(2).innerText = puxador;
+        if (!nome || !local || !puxador) return alert("Preencha todos os campos");
 
+        const votos = JSON.parse(localStorage.getItem("votos")) || [];
+        votos.push({ nome, local, puxador });
+        localStorage.setItem("votos", JSON.stringify(votos));
+
+        atualizarTabela();
         document.getElementById("formCadastro").reset();
       });
-    };
+
+      document.getElementById("limparFiltros").addEventListener("click", () => {
+        document.getElementById("filtroNome").value = "";
+        document.getElementById("filtroLocal").value = "";
+        document.getElementById("filtroPuxador").value = "";
+        atualizarTabela();
+      });
+
+      // Filtros básicos
+      const filtroNome = document.getElementById("filtroNome");
+      const filtroLocal = document.getElementById("filtroLocal");
+      const filtroPuxador = document.getElementById("filtroPuxador");
+
+      function aplicarFiltros() {
+        const votos = JSON.parse(localStorage.getItem("votos")) || [];
+        const nomeFiltro = filtroNome.value.toLowerCase();
+        const localFiltro = filtroLocal.value.toLowerCase();
+        const puxadorFiltro = filtroPuxador.value.toLowerCase();
+
+        const tabela = document.getElementById("tabelaVotos");
+        tabela.innerHTML = "";
+
+        votos.forEach(voto => {
+          if (
+            voto.nome.toLowerCase().includes(nomeFiltro) &&
+            voto.local.toLowerCase().includes(localFiltro) &&
+            voto.puxador.toLowerCase().includes(puxadorFiltro)
+          ) {
+            const linha = tabela.insertRow();
+            linha.insertCell(0).innerText = voto.nome;
+            linha.insertCell(1).innerText = voto.local;
+            linha.insertCell(2).innerText = voto.puxador;
+          }
+        });
+      }
+
+      filtroNome.addEventListener("input", aplicarFiltros);
+      filtroLocal.addEventListener("input", aplicarFiltros);
+      filtroPuxador.addEventListener("input", aplicarFiltros);
+    }
   </script>
 </body>
 </html>
