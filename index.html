@@ -174,10 +174,20 @@
       font-size: 0.85rem;
       font-weight: 600;
       transition: background-color 0.3s ease;
+      margin-left: 0.3rem;
     }
 
     td button:hover {
       background-color: #991f00;
+    }
+
+    /* Botão editar com cor diferente */
+    td button.editar-btn {
+      background-color: #0066cc;
+    }
+
+    td button.editar-btn:hover {
+      background-color: #004d99;
     }
 
     /* Footer fixo embaixo */
@@ -291,29 +301,30 @@
 
     <main>
       <section id="cadastro">
-        <h2>Cadastrar Novo Voto</h2>
+        <h2 id="tituloFormulario">Cadastrar Novo Voto</h2>
         <form id="formCadastro">
           <input type="text" id="nomeEleitor" required placeholder="Nome do Eleitor" />
           <input type="text" id="localVotacao" required placeholder="Local de Votação" />
           <input type="text" id="puxador" required placeholder="Puxador" />
-          <button type="submit">Cadastrar Voto</button>
+          <button type="submit" id="botaoEnviar">Cadastrar</button>
+          <button type="button" id="botaoCancelarEdicao" class="hidden" onclick="cancelarEdicao()">Cancelar</button>
         </form>
       </section>
 
       <section id="filtros">
         <h2>Filtrar Registros</h2>
         <div class="filtros">
-          <input type="text" id="filtroNome" placeholder="Filtrar por nome do eleitor" />
-          <input type="text" id="filtroLocal" placeholder="Filtrar por local de votação" />
-          <input type="text" id="filtroPuxador" placeholder="Filtrar por puxador" />
-          <button id="limparFiltros">Limpar</button>
+          <input type="text" id="filtroNome" placeholder="Filtrar por Nome" oninput="filtrarRegistros()" />
+          <input type="text" id="filtroLocal" placeholder="Filtrar por Local" oninput="filtrarRegistros()" />
+          <input type="text" id="filtroPuxador" placeholder="Filtrar por Puxador" oninput="filtrarRegistros()" />
+          <button onclick="limparFiltros()">Limpar Filtros</button>
         </div>
       </section>
 
       <section id="registros">
-        <h2>Registros Cadastrados</h2>
+        <h2>Registros de Votos</h2>
         <div class="tabela-scroll">
-          <table>
+          <table id="tabelaVotos" aria-label="Tabela de votos registrados">
             <thead>
               <tr>
                 <th>Nome do Eleitor</th>
@@ -322,206 +333,276 @@
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody id="tabelaVotos"></tbody>
+            <tbody>
+              <!-- Registros serão inseridos aqui -->
+            </tbody>
           </table>
         </div>
       </section>
 
       <section id="estatisticas">
         <h2>Estatísticas</h2>
-        <canvas id="graficoPuxadores" style="max-width:100%;margin-bottom: 1rem;"></canvas>
-        <canvas id="graficoLocais" style="max-width:100%;"></canvas>
+        <canvas id="graficoPuxadores" aria-label="Gráfico de votos por puxador" role="img"></canvas>
       </section>
     </main>
 
-    <footer>
-      &copy; 2025 Sistema de Mapeamento de Votos - Lázila Gomes. Todos os direitos reservados.
-    </footer>
+    <footer>© 2025 Mapeamento de Votos - Eleição de Suplente </footer>
   </div>
 
   <script>
-    // Usuários para login
-    const usuarios = {
-      "11023618362": "02082007",
-      "61120546397": "06021997",
-      "admin": "1234"
-    };
+    // Dados de usuários para login (exemplo simples)
+    const usuarios = [
+      { usuario: '11023618362', senha: '02082007' },
+      { usuario: '61120546397', senha: '06021997' },
+    ];
 
-    // Atualiza a tabela exibindo votos e botões de exclusão
-    function atualizarTabela() {
-      const tabela = document.getElementById("tabelaVotos");
-      tabela.innerHTML = "";
-      const votos = JSON.parse(localStorage.getItem("votos") || "[]");
+    // Estado da edição
+    let editandoId = null;
 
-      votos.forEach((voto, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${voto.nome}</td>
-          <td>${voto.local}</td>
-          <td>${voto.puxador}</td>
-          <td><button onclick="excluirVoto(${i})" title="Excluir voto">Excluir</button></td>
-        `;
-        tabela.appendChild(tr);
-      });
-      atualizarGraficos(votos);
-    }
+    // Pega os elementos
+    const loginSection = document.getElementById('loginSection');
+    const mainContent = document.getElementById('mainContent');
+    const formCadastro = document.getElementById('formCadastro');
+    const nomeEleitorInput = document.getElementById('nomeEleitor');
+    const localVotacaoInput = document.getElementById('localVotacao');
+    const puxadorInput = document.getElementById('puxador');
+    const botaoEnviar = document.getElementById('botaoEnviar');
+    const botaoCancelarEdicao = document.getElementById('botaoCancelarEdicao');
+    const tabelaVotosBody = document.querySelector('#tabelaVotos tbody');
+    const tituloFormulario = document.getElementById('tituloFormulario');
 
-    // Excluir voto
-    function excluirVoto(index) {
-      if (confirm("Confirma exclusão deste voto?")) {
-        let votos = JSON.parse(localStorage.getItem("votos") || "[]");
-        votos.splice(index, 1);
-        localStorage.setItem("votos", JSON.stringify(votos));
-        atualizarTabela();
+    // LOGIN
+    function fazerLogin() {
+      const usuario = document.getElementById('loginUsuario').value.trim();
+      const senha = document.getElementById('loginSenha').value.trim();
+      if (usuarios.some(u => u.usuario === usuario && u.senha === senha)) {
+        loginSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        carregarVotos();
+        atualizarGrafico();
+      } else {
+        alert('Usuário ou senha incorretos.');
       }
     }
 
-    // Atualizar gráficos
-    function atualizarGraficos(votos) {
-      // Contar puxadores
+    function logout() {
+      if (confirm('Deseja realmente sair?')) {
+        loginSection.classList.remove('hidden');
+        mainContent.classList.add('hidden');
+        formCadastro.reset();
+        limparFiltros();
+        editandoId = null;
+        tituloFormulario.textContent = 'Cadastrar Novo Voto';
+        botaoEnviar.textContent = 'Cadastrar';
+        botaoCancelarEdicao.classList.add('hidden');
+      }
+    }
+
+    // Função para rolar a página para a seção escolhida
+    function scrollToSection(id) {
+      const sec = document.getElementById(id);
+      if (sec) {
+        sec.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Função para salvar os votos no localStorage
+    function salvarVotos(votos) {
+      localStorage.setItem('votos', JSON.stringify(votos));
+    }
+
+    // Função para carregar os votos do localStorage
+    function carregarVotos() {
+      const votos = JSON.parse(localStorage.getItem('votos')) || [];
+      return votos;
+    }
+
+    // Renderiza a tabela com os votos
+    function renderizarTabela(votos) {
+      tabelaVotosBody.innerHTML = '';
+      votos.forEach((voto, index) => {
+        const tr = document.createElement('tr');
+
+        const tdNome = document.createElement('td');
+        tdNome.textContent = voto.nome;
+        tr.appendChild(tdNome);
+
+        const tdLocal = document.createElement('td');
+        tdLocal.textContent = voto.local;
+        tr.appendChild(tdLocal);
+
+        const tdPuxador = document.createElement('td');
+        tdPuxador.textContent = voto.puxador;
+        tr.appendChild(tdPuxador);
+
+        const tdAcoes = document.createElement('td');
+
+        // Botão Editar
+        const btnEditar = document.createElement('button');
+        btnEditar.textContent = 'Editar';
+        btnEditar.classList.add('editar-btn');
+        btnEditar.setAttribute('aria-label', `Editar voto de ${voto.nome}`);
+        btnEditar.onclick = () => iniciarEdicao(index);
+        tdAcoes.appendChild(btnEditar);
+
+        // Botão Excluir
+        const btnExcluir = document.createElement('button');
+        btnExcluir.textContent = 'Excluir';
+        btnExcluir.setAttribute('aria-label', `Excluir voto de ${voto.nome}`);
+        btnExcluir.onclick = () => excluirVoto(index);
+        tdAcoes.appendChild(btnExcluir);
+
+        tr.appendChild(tdAcoes);
+        tabelaVotosBody.appendChild(tr);
+      });
+    }
+
+    // Função para adicionar ou editar voto
+    formCadastro.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const nome = nomeEleitorInput.value.trim();
+      const local = localVotacaoInput.value.trim();
+      const puxador = puxadorInput.value.trim();
+
+      if (!nome || !local || !puxador) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+
+      let votos = carregarVotos();
+
+      if (editandoId === null) {
+        // Cadastrar novo voto
+        votos.push({ nome, local, puxador });
+      } else {
+        // Salvar edição
+        votos[editandoId] = { nome, local, puxador };
+        editandoId = null;
+        tituloFormulario.textContent = 'Cadastrar Novo Voto';
+        botaoEnviar.textContent = 'Cadastrar';
+        botaoCancelarEdicao.classList.add('hidden');
+      }
+
+      salvarVotos(votos);
+      renderizarTabela(votos);
+      atualizarGrafico();
+      formCadastro.reset();
+    });
+
+    // Função para excluir voto
+    function excluirVoto(index) {
+      if (confirm('Deseja excluir este voto?')) {
+        let votos = carregarVotos();
+        votos.splice(index, 1);
+        salvarVotos(votos);
+        renderizarTabela(votos);
+        atualizarGrafico();
+      }
+    }
+
+    // Inicia edição de um voto
+    function iniciarEdicao(index) {
+      let votos = carregarVotos();
+      const voto = votos[index];
+      nomeEleitorInput.value = voto.nome;
+      localVotacaoInput.value = voto.local;
+      puxadorInput.value = voto.puxador;
+      editandoId = index;
+      tituloFormulario.textContent = 'Editando Voto';
+      botaoEnviar.textContent = 'Salvar Alterações';
+      botaoCancelarEdicao.classList.remove('hidden');
+      scrollToSection('cadastro');
+    }
+
+    // Cancela edição
+    function cancelarEdicao() {
+      editandoId = null;
+      formCadastro.reset();
+      tituloFormulario.textContent = 'Cadastrar Novo Voto';
+      botaoEnviar.textContent = 'Cadastrar';
+      botaoCancelarEdicao.classList.add('hidden');
+    }
+
+    // Funções para filtro
+    function filtrarRegistros() {
+      const filtroNome = document.getElementById('filtroNome').value.toLowerCase();
+      const filtroLocal = document.getElementById('filtroLocal').value.toLowerCase();
+      const filtroPuxador = document.getElementById('filtroPuxador').value.toLowerCase();
+
+      let votos = carregarVotos();
+
+      const votosFiltrados = votos.filter(voto =>
+        voto.nome.toLowerCase().includes(filtroNome) &&
+        voto.local.toLowerCase().includes(filtroLocal) &&
+        voto.puxador.toLowerCase().includes(filtroPuxador)
+      );
+
+      renderizarTabela(votosFiltrados);
+    }
+
+    function limparFiltros() {
+      document.getElementById('filtroNome').value = '';
+      document.getElementById('filtroLocal').value = '';
+      document.getElementById('filtroPuxador').value = '';
+      renderizarTabela(carregarVotos());
+    }
+
+    // Gráfico Chart.js
+    let grafico;
+
+    function atualizarGrafico() {
+      const votos = carregarVotos();
       const contagemPuxadores = {};
-      const contagemLocais = {};
-      votos.forEach(v => {
-        contagemPuxadores[v.puxador] = (contagemPuxadores[v.puxador] || 0) + 1;
-        contagemLocais[v.local] = (contagemLocais[v.local] || 0) + 1;
+
+      votos.forEach(voto => {
+        contagemPuxadores[voto.puxador] = (contagemPuxadores[voto.puxador] || 0) + 1;
       });
 
-      // Gráfico Puxadores
-      const ctxPuxadores = document.getElementById("graficoPuxadores").getContext("2d");
-      if (window.graficoPuxadores) window.graficoPuxadores.destroy();
-      window.graficoPuxadores = new Chart(ctxPuxadores, {
+      const labels = Object.keys(contagemPuxadores);
+      const data = Object.values(contagemPuxadores);
+
+      const ctx = document.getElementById('graficoPuxadores').getContext('2d');
+
+      if (grafico) {
+        grafico.destroy();
+      }
+
+      grafico = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: Object.keys(contagemPuxadores),
+          labels,
           datasets: [{
-            label: 'Votos por Puxador',
-            data: Object.values(contagemPuxadores),
-            backgroundColor: '#004080',
+            label: 'Número de Votos',
+            data,
+            backgroundColor: '#004080'
           }]
         },
         options: {
           responsive: true,
           scales: {
-            y: { beginAtZero: true, precision: 0 }
-          }
-        }
-      });
-
-      // Gráfico Locais
-      const ctxLocais = document.getElementById("graficoLocais").getContext("2d");
-      if (window.graficoLocais) window.graficoLocais.destroy();
-      window.graficoLocais = new Chart(ctxLocais, {
-        type: 'pie',
-        data: {
-          labels: Object.keys(contagemLocais),
-          datasets: [{
-            label: 'Votos por Local',
-            data: Object.values(contagemLocais),
-            backgroundColor: [
-              '#003366', '#0066cc', '#3399ff', '#99ccff', '#cce6ff', '#80b3ff', '#4d94ff'
-            ],
-          }]
-        },
-        options: {
-          responsive: true,
+            y: {
+              beginAtZero: true,
+              precision: 0
+            }
+          },
           plugins: {
-            legend: { position: 'bottom' }
+            legend: {
+              display: false
+            },
+            tooltip: {
+              enabled: true
+            }
           }
         }
       });
     }
 
-    // Cadastro novo voto
-    document.getElementById("formCadastro").addEventListener("submit", e => {
-      e.preventDefault();
-      const nome = document.getElementById("nomeEleitor").value.trim();
-      const local = document.getElementById("localVotacao").value.trim();
-      const puxador = document.getElementById("puxador").value.trim();
-
-      if (!nome || !local || !puxador) {
-        alert("Preencha todos os campos.");
-        return;
-      }
-
-      const votos = JSON.parse(localStorage.getItem("votos") || "[]");
-      votos.push({ nome, local, puxador });
-      localStorage.setItem("votos", JSON.stringify(votos));
-
-      document.getElementById("formCadastro").reset();
-      atualizarTabela();
-      alert("Voto cadastrado com sucesso!");
+    // Inicialização - manter tudo oculto até login
+    document.addEventListener('DOMContentLoaded', () => {
+      // Nada aqui ainda
     });
-
-    // Filtrar registros
-    function aplicarFiltros() {
-      const filtroNome = document.getElementById("filtroNome").value.toLowerCase();
-      const filtroLocal = document.getElementById("filtroLocal").value.toLowerCase();
-      const filtroPuxador = document.getElementById("filtroPuxador").value.toLowerCase();
-
-      const votos = JSON.parse(localStorage.getItem("votos") || "[]");
-      const votosFiltrados = votos.filter(voto => {
-        return (
-          voto.nome.toLowerCase().includes(filtroNome) &&
-          voto.local.toLowerCase().includes(filtroLocal) &&
-          voto.puxador.toLowerCase().includes(filtroPuxador)
-        );
-      });
-
-      // Atualiza tabela com os filtrados
-      const tabela = document.getElementById("tabelaVotos");
-      tabela.innerHTML = "";
-      votosFiltrados.forEach((voto, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${voto.nome}</td>
-          <td>${voto.local}</td>
-          <td>${voto.puxador}</td>
-          <td><button onclick="excluirVoto(${i})" title="Excluir voto">Excluir</button></td>
-        `;
-        tabela.appendChild(tr);
-      });
-      atualizarGraficos(votosFiltrados);
-    }
-
-    document.getElementById("filtroNome").addEventListener("input", aplicarFiltros);
-    document.getElementById("filtroLocal").addEventListener("input", aplicarFiltros);
-    document.getElementById("filtroPuxador").addEventListener("input", aplicarFiltros);
-
-    document.getElementById("limparFiltros").addEventListener("click", () => {
-      document.getElementById("filtroNome").value = "";
-      document.getElementById("filtroLocal").value = "";
-      document.getElementById("filtroPuxador").value = "";
-      aplicarFiltros();
-    });
-
-    // Scroll suave para seção
-    function scrollToSection(id) {
-      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Login e logout
-    function fazerLogin() {
-      const user = document.getElementById("loginUsuario").value.trim();
-      const pass = document.getElementById("loginSenha").value.trim();
-
-      if (usuarios[user] && usuarios[user] === pass) {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("mainContent").classList.remove("hidden");
-        atualizarTabela();
-      } else {
-        alert("Usuário ou senha incorretos.");
-      }
-    }
-
-    function logout() {
-      if (confirm("Deseja realmente sair?")) {
-        document.getElementById("loginSection").classList.remove("hidden");
-        document.getElementById("mainContent").classList.add("hidden");
-        document.getElementById("loginUsuario").value = "";
-        document.getElementById("loginSenha").value = "";
-      }
-    }
   </script>
+
 </body>
 
 </html>
