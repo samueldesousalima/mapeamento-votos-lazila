@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapeamento de Votos - Lázila Gomes</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .login-container input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .login-container button {
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #004080;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+    header {
+      background-color: #004080;
+      color: white;
+      padding: 1rem 0;
+    }
+    header h1, header p {
+      text-align: center;
+      margin: 0.2rem;
+    }
+    nav {
+      background-color: #e6f0ff;
+      display: flex;
+      justify-content: center;
+      padding: 0.5rem;
+      flex-wrap: wrap;
+    }
+    nav button {
+      background: none;
+      border: none;
+      margin: 0.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: #004080;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      flex: 1;
+    }
+    .card {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    .form-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: #0066cc;
+      color: white;
+    }
+    .btn-secundario {
+      background-color: #ccc;
+    }
+    .tabela-scroll {
+      overflow-x: auto;
+    }
+    .tabela-votos {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .tabela-votos th, .tabela-votos td {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+    }
+    .footer {
+      background-color: #004080;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loginSection" class="login-container">
+    <h2>Login</h2>
+    <input type="text" id="loginUsuario" placeholder="Usuário (CPF)">
+    <input type="password" id="loginSenha" placeholder="Senha">
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <div id="mainContent" class="hidden">
+    <header>
+      <h1>Mapeamento de Votos - Lázila Gomes</h1>
+      <p>Sistema de monitoramento popular para fins organizacionais</p>
+    </header>
+    <nav>
+      <button onclick="scrollToSection('cadastro')">Cadastrar</button>
+      <button onclick="scrollToSection('filtros')">Filtros</button>
+      <button onclick="scrollToSection('registros')">Registros</button>
+      <button onclick="scrollToSection('estatisticas')">Estatísticas</button>
+      <button onclick="logout()">Sair</button>
+    </nav>
+
+    <main class="container">
+      <section id="cadastro" class="card">
+        <h2>Cadastrar Novo Voto</h2>
+        <form id="formCadastro" class="form-grid">
+          <input type="text" id="nomeEleitor" required placeholder="Nome do Eleitor" />
+          <input type="text" id="localVotacao" required placeholder="Local de Votação" />
+          <input type="text" id="puxador" required placeholder="Puxador" />
+          <button type="submit" class="btn btn-primary">Cadastrar Voto</button>
+        </form>
+      </section>
+
+      <section id="filtros" class="card">
+        <h2>Filtrar Registros</h2>
+        <div class="form-grid">
+          <input type="text" id="filtroNome" placeholder="Filtrar por nome do eleitor" />
+          <input type="text" id="filtroLocal" placeholder="Filtrar por local de votação" />
+          <input type="text" id="filtroPuxador" placeholder="Filtrar por puxador" />
+          <button id="limparFiltros" class="btn btn-secundario">Limpar</button>
+        </div>
+      </section>
+
+      <section id="registros" class="card">
+        <h2>Registros Cadastrados</h2>
+        <div class="tabela-scroll">
+          <table class="tabela-votos">
+            <thead>
+              <tr>
+                <th>Nome do Eleitor</th>
+                <th>Local de Votação</th>
+                <th>Puxador</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaVotos"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="estatisticas" class="card">
+        <h2>Estatísticas</h2>
+        <div class="graficos">
+          <canvas id="graficoPuxadores"></canvas>
+          <canvas id="graficoLocais"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2025 Sistema de Mapeamento de Votos - Lázila Gomes. Todos os direitos reservados.</p>
+    </footer>
+  </div>
+
+  <script>
+    const usuarios = {
+      "11023618362": "02082007",
+      "61120546397": "06021997",
+      "admin": "1234"
+    };
+
+    // Função para atualizar a tabela com os votos do localStorage
+    function atualizarTabela() {
+      const tabela = document.getElementById("tabelaVotos");
+      tabela.innerHTML = "";
+      const votos = JSON.parse(localStorage.getItem("votos")) || [];
+      votos.forEach(voto => {
+        const linha = tabela.insertRow();
+        linha.insertCell(0).innerText = voto.nome;
+        linha.insertCell(1).innerText = voto.local;
+        linha.insertCell(2).innerText = voto.puxador;
+      });
+    }
+
+    function fazerLogin() {
+      const user = document.getElementById('loginUsuario').value;
+      const pass = document.getElementById('loginSenha').value;
+      if (usuarios[user] === pass) {
+        localStorage.setItem("logado", "true");
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+        atualizarTabela();
+      } else {
+        alert("Usuário ou senha incorretos");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("logado");
+      location.reload();
+    }
+
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem("logado") === "true") {
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+        atualizarTabela();
+      } else {
+        document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("mainContent").classList.add("hidden");
+      }
+
+      document.getElementById("formCadastro").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("nomeEleitor").value.trim();
+        const local = document.getElementById("localVotacao").value.trim();
+        const puxador = document.getElementById("puxador").value.trim();
+
+        if (!nome || !local || !puxador) return alert("Preencha todos os campos");
+
+        const votos = JSON.parse(localStorage.getItem("votos")) || [];
+        votos.push({ nome, local, puxador });
+        localStorage.setItem("votos", JSON.stringify(votos));
+
+        atualizarTabela();
+        document.getElementById("formCadastro").reset();
+      });
+
+      document.getElementById("limparFiltros").addEventListener("click", () => {
+        document.getElementById("filtroNome").value = "";
+        document.getElementById("filtroLocal").value = "";
+        document.getElementById("filtroPuxador").value = "";
+        atualizarTabela();
+      });
+
+      // Filtros básicos
+      const filtroNome = document.getElementById("filtroNome");
+      const filtroLocal = document.getElementById("filtroLocal");
+      const filtroPuxador = document.getElementById("filtroPuxador");
+
+      function aplicarFiltros() {
+        const votos = JSON.parse(localStorage.getItem("votos")) || [];
+        const nomeFiltro = filtroNome.value.toLowerCase();
+        const localFiltro = filtroLocal.value.toLowerCase();
+        const puxadorFiltro = filtroPuxador.value.toLowerCase();
+
+        const tabela = document.getElementById("tabelaVotos");
+        tabela.innerHTML = "";
+
+        votos.forEach(voto => {
+          if (
+            voto.nome.toLowerCase().includes(nomeFiltro) &&
+            voto.local.toLowerCase().includes(localFiltro) &&
+            voto.puxador.toLowerCase().includes(puxadorFiltro)
+          ) {
+            const linha = tabela.insertRow();
+            linha.insertCell(0).innerText = voto.nome;
+            linha.insertCell(1).innerText = voto.local;
+            linha.insertCell(2).innerText = voto.puxador;
+          }
+        });
+      }
+
+      filtroNome.addEventListener("input", aplicarFiltros);
+      filtroLocal.addEventListener("input", aplicarFiltros);
+      filtroPuxador.addEventListener("input", aplicarFiltros);
+    }
+  </script>
+</body>
+</html>
